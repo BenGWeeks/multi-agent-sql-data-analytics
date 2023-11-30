@@ -1,24 +1,30 @@
 import os
-from postgres_da_ai_agent.modules.db import PostgresManager
-from postgres_da_ai_agent.modules import llm
 import dotenv
 import argparse
 import autogen
+from postgres_da_ai_agent.modules import llm
+from postgres_da_ai_agent.modules.db import SQLManager
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.orm import sessionmaker
 
 dotenv.load_dotenv()
 
-assert os.environ.get("DATABASE_URL"), "POSTGRES_CONNECTION_URL not found in .env file"
-assert os.environ.get(
-    "OPENAI_API_KEY"
-), "POSTGRES_CONNECTION_URL not found in .env file"
+# Check environment variables
+assert os.environ.get("DATABASE_URL"), "DATABASE_URL not found in .env file"
+assert os.environ.get("OPENAI_API_KEY"), "OPENAI_API_KEY not found in .env file"
 
+# Get environment variables
 DB_URL = os.environ.get("DATABASE_URL")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
+# SQLAlchemy setup
+engine = create_engine(DB_URL)
+Session = sessionmaker(bind=engine)
+
+# Constants
 POSTGRES_TABLE_DEFINITIONS_CAP_REF = "TABLE_DEFINITIONS"
 RESPONSE_FORMAT_CAP_REF = "RESPONSE_FORMAT"
 SQL_DELIMITER = "---------"
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -31,10 +37,13 @@ def main():
 
     prompt = f"Fulfill this database query: {args.prompt}. "
 
-    with PostgresManager() as db:
+    DB_URL = os.environ.get("DATABASE_URL")
+
+    with SQLManager() as db:
         db.connect_with_url(DB_URL)
 
         table_definitions = db.get_table_definitions_for_prompt()
+        print(table_definitions)
 
         prompt = llm.add_cap_ref(
             prompt,
