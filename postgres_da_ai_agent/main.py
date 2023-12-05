@@ -112,7 +112,7 @@ def main():
         user_proxy = autogen.UserProxyAgent(
             name="Admin",
             system_message=USER_PROXY_PROMPT,
-            code_execution_config=False,
+            code_execution_config={"work_dir": "web"},
             human_input_mode="ALWAYS",
             is_termination_msg=is_termination_msg,
         )

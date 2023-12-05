@@ -98,7 +98,7 @@ class SQLManager:
         for table_name in table_names:
             try:
                 table = self.metadata.tables[table_name]
-                print("Table "+ table_name)
+                #print("Table "+ table_name)
                 columns = []
                 for column in table.columns:
                     columns.append("{} {}".format(column.name, column.type))
