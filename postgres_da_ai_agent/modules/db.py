@@ -87,25 +87,34 @@ class SQLManager:
         create_table_stmt = create_table_stmt.rstrip(",\n") + "\n);"
         return create_table_stmt
 
+    def reflect_tables(self):
+        self.metadata = MetaData()
+
+        # Reflect tables for each schema
+        for schema in ['dim', 'fact']:
+            self.metadata.reflect(bind=self.engine, schema=schema)
+
     def get_all_table_names(self):
-        inspector = inspect(self.engine)
-        tables = inspector.get_table_names(schema='dbo')
-        return tables
+        table_names = []
+        for schema in ['dim', 'fact']:
+            inspector = inspect(self.engine)
+            tables = inspector.get_table_names(schema=schema)
+            # Prefix table name with schema
+            table_names.extend([f"{schema}.{table}" for table in tables])
+        return table_names
 
     def get_table_definitions_for_prompt(self):
+        self.reflect_tables()
         table_names = self.get_all_table_names()
         definitions = []
         for table_name in table_names:
             try:
+                # Access table with schema prefix
                 table = self.metadata.tables[table_name]
-                #print("Table "+ table_name)
-                columns = []
-                for column in table.columns:
-                    columns.append("{} {}".format(column.name, column.type))
+                columns = ["{} {}".format(column.name, column.type) for column in table.columns]
                 table_definition = "CREATE TABLE {} (\n  {});".format(table_name, ',\n  '.join(columns))
                 definitions.append(table_definition)
             except KeyError:
-                # Handle tables and columns you don't have access to
                 print("Error accessing " + table_name)
                 continue
         return "\n\n".join(definitions)

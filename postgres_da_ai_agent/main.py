@@ -43,7 +43,7 @@ def main():
         db.connect_with_url(DB_URL)
 
         table_definitions = db.get_table_definitions_for_prompt()
-        print(table_definitions)
+        #print(table_definitions)
 
         prompt = llm.add_cap_ref(
             prompt,
@@ -56,7 +56,8 @@ def main():
         gpt4_config = {
             "use_cache": False,
             "temperature": 0,
-            "config_list": autogen.config_list_from_models(["gpt-4"]),
+            #"config_list": autogen.config_list_from_models(["gpt-4"]),
+            "config_list": autogen.config_list_from_models(["gpt-4-1106-preview"]),
             "request_timeout": 120,
             "functions": [
                 {
@@ -95,7 +96,8 @@ def main():
             + COMPLETION_PROMPT
         )
         DATA_ENGINEER_PROMPT = (
-            "A Data Engineer. You follow an approved plan. Generate the initial SQL based on the requirements provided. Note, the database use SQL Server. Send it to the Sr Data Analyst to be executed."
+            "A Data Engineer. You follow an approved plan. Generate the initial SQL based on the requirements provided. Send it to the Sr Data Analyst to be executed."
+            + "Note, the database use SQL Server, and 'Order' is a reserved word."
             + COMPLETION_PROMPT
         )
         SR_DATA_ANALYST_PROMPT = (
@@ -152,7 +154,7 @@ def main():
         groupchat = autogen.GroupChat(
             agents=[user_proxy, data_engineer, sr_data_analyst, product_manager],
             messages=[],
-            max_round=10,
+            max_round=20,
         )
         manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=gpt4_config)
 
