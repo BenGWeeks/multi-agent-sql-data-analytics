@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import sqlalchemy
 from sqlalchemy import create_engine, text, MetaData, Table, select, inspect
 from sqlalchemy.orm import sessionmaker
 
@@ -18,10 +19,13 @@ class SQLManager:
             self.session.close()
 
     def connect_with_url(self, url):
-        self.engine = create_engine(url)
-        self.Session = sessionmaker(bind=self.engine)
-        self.session = self.Session()
-        self.metadata.reflect(bind=self.engine)
+        #try:
+            self.engine = create_engine(url)
+            self.Session = sessionmaker(bind=self.engine)
+            self.session = self.Session()
+            self.metadata.reflect(bind=self.engine)
+        #except sqlalchemy.exc.InterfaceError as e:
+        #    print("An error occurred while connecting to the database: ", str(e))
 
     #def upsert(self, table_name, _dict):
     #    metadata = MetaData(self.engine)

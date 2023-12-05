@@ -95,7 +95,7 @@ def main():
             + COMPLETION_PROMPT
         )
         DATA_ENGINEER_PROMPT = (
-            "A Data Engineer. You follow an approved plan. Generate the initial SQL based on the requirements provided. Send it to the Sr Data Analyst to be executed."
+            "A Data Engineer. You follow an approved plan. Generate the initial SQL based on the requirements provided. Note, the database use SQL Server. Send it to the Sr Data Analyst to be executed."
             + COMPLETION_PROMPT
         )
         SR_DATA_ANALYST_PROMPT = (
@@ -113,7 +113,7 @@ def main():
             name="Admin",
             system_message=USER_PROXY_PROMPT,
             code_execution_config=False,
-            human_input_mode="NEVER",
+            human_input_mode="ALWAYS",
             is_termination_msg=is_termination_msg,
         )
 
