@@ -8,7 +8,7 @@ import sys
 from dotenv import load_dotenv
 import os
 from typing import Any, Dict
-import postgres_da_ai_agent.openai_test as openai_test
+import openai
 
 # load .env file
 load_dotenv()
@@ -16,7 +16,7 @@ load_dotenv()
 assert os.environ.get("OPENAI_API_KEY")
 
 # get openai api key
-openai_test.api_key = os.environ.get("OPENAI_API_KEY")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 # ------------------ helpers ------------------
 
@@ -47,7 +47,7 @@ def response_parser(response: Dict[str, Any]):
 
 def prompt(prompt: str, model: str = "gpt-4") -> str:
     # validate the openai api key - if it's not valid, raise an error
-    if not openai_test.api_key:
+    if not openai.api_key:
         sys.exit(
             """
 ERORR: OpenAI API key not found. Please export your key to OPENAI_API_KEY
@@ -56,7 +56,7 @@ Example bash command:
             """
         )
 
-    response = openai_test.ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model=model,
         messages=[
             {

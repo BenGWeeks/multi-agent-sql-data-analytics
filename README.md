@@ -35,6 +35,15 @@ It's the first of many multi-agent applications that utilize LLMs (large languag
 - `poetry install`
 - `cp .env.sample .env`
 - Fill out `.env` with your postgres url and openai api key
+- Import the public repository GPG keys
+`curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -`
+- Register the Microsoft Ubuntu repository
+`curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list`
+- Update the repository sources
+`sudo apt-get update`
+- Install the ODBC Driver for SQL Server (17 or 18 depending on your requirement)
+`sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18`
+
 - Run a prompt against your database
   - `poetry run start --prompt "<ask your agent a question about your postgres database>"`
     - Start with something simple to get a feel for it and then build up to more complex questions.
