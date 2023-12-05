@@ -8,7 +8,7 @@ class SQLManager:
         self.engine = None
         self.Session = None
         self.session = None
-        self.metadata = MetaData()  # Define the metadata attribute
+        self.metadata = MetaData()
 
     def __enter__(self):
         return self
@@ -21,6 +21,7 @@ class SQLManager:
         self.engine = create_engine(url)
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
+        self.metadata.reflect(bind=self.engine)
 
     #def upsert(self, table_name, _dict):
     #    metadata = MetaData(self.engine)
