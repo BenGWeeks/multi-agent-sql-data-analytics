@@ -30,7 +30,7 @@ function App() {
 
     // Function to handle the submit action
     function handleSubmit() {
-      fetch('http://localhost:3000/prompt', {
+      fetch('https://bug-free-lamp-qx9j5xqg4vhr99-3000.app.github.dev/prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

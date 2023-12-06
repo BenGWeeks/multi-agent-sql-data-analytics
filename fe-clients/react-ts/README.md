@@ -3,6 +3,10 @@
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 ## Setup
+- Change directory
+  - `cd fe-clients/react-ts`
+- Install bun
+  - `curl https://bun.sh/install | bash`
 - Install Dependencies
   - `bun install`
 - Start the dev server
