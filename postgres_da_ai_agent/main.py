@@ -105,22 +105,52 @@ def main():
             return False
 
         COMPLETION_PROMPT = "If everything looks good, respond with APPROVED"
+        COMPANY_INFORMATION = "You work at a multinational company that deals with security and this is a database of alerts from cameras. They are using AI on the edge, and use software to handle some of the alerts. They use 'talk downs' or 'audio warnings' to speak to potential intruders."
 
         USER_PROXY_PROMPT = (
             "A human admin. Interact with the Product Manager to discuss the plan. Plan execution needs to be approved by this admin."
+            + COMPANY_INFORMATION
             + COMPLETION_PROMPT
         )
         DATA_ENGINEER_PROMPT = (
             "A Data Engineer. You follow an approved plan. Generate the initial SQL based on the requirements provided. Send it to the Sr Data Analyst to be executed."
-            + "Note, the database use SQL Server, and 'Order' is a reserved word."
+            + "Some notes are as follows:"
+            + "- The database use SQL Server, and 'Order' is a reserved word."
+            + "- Alerts are grouped."
+            + "- These are very large databases, do not return all records."
+            + "- When filtering datetimes, use temporary tables to improve performance before applying additional filters."
+            + "- Not all the columns are indexed, so for datetime queries use columns such as DateTimeAlarmClosed and is recorded in UTC."
+            + "- To get SLAs we use Group alarms."
+            + "- SLA for response time (ResponseTime column) is 30 seconds."
+            + "- CARS standards for 'Cratos Alarm Reduction System'."
+            + "- 'IsSoftwareHandled' or 'ClosedbyCARS' means that the alarm is handled by a computer (software) rather than a human."
+            + "- A system is made up of multiple cameras plugged into the same NVR (Network Video Recorder)"
+            + "- A site (an office, or warehouse of example) is made up of one of more systems."
+            + "- CommissionStatus in the Site table is whether we are charging a customer for a site. We don't care for SLAs if the site isn't live (Live = 1)."
+            + "- We have 'IsCurrent' for operators, customers, sites, system, and system device (camera)."
+            + "- We have IndividualAlarmsUS_Day which aggregates alerts and SLAs into days which can be more efficient to query."
+            + "- We have GroupAlarmsUS_Day which aggregates group alarms and SLAs into days which can be more efficient to query."
+            + "- Sites have reference codes that are used in other systems such as Salesforce."
+            + "- We use reference codes of the format s**-****-xxxx ('s' for site, then 'us' for US, or 'c' for customer, or 'o' for operator)."
+            + "- A customer can have multiple sites."
+            + "- A dealer can have multiple customers."
+            + "- All dealers are operators, but not all operators are dealers."
+            + "- A hub is a team of people that alerts."
+            + "- An event is an alarm or an alert."
+            + "- An incident is an alarm (or alarms) of interest."
+            + "- An isolation is instruction for our software to handle the alarm instead of a human."
+            + "- Tables are often suffixed with their region, e.g. 'US', 'EMEA'."
+            + COMPANY_INFORMATION
             + COMPLETION_PROMPT
         )
         SR_DATA_ANALYST_PROMPT = (
-            "Sr Data Analyst. You follow an approved plan. You run the SQL query, generate the response and send it to the product manager for final review."
-            + COMPLETION_PROMPT
+            "Sr Data Analyst. You follow an approved plan. You run the SQL query, generate the response, summarize the results, and send it to the product manager for final review."
+            + COMPANY_INFORMATION
+            #+ COMPLETION_PROMPT
         )
         PRODUCT_MANAGER_PROMPT = (
             "Product Manager. Validate the response to make sure it's correct"
+            + COMPANY_INFORMATION
             + COMPLETION_PROMPT
         )
 
