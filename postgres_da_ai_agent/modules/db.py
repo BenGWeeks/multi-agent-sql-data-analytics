@@ -91,12 +91,12 @@ class SQLManager:
         self.metadata = MetaData()
 
         # Reflect tables for each schema
-        for schema in ['dim', 'fact']:
+        for schema in ['dim', 'fact', 'dbo']:
             self.metadata.reflect(bind=self.engine, schema=schema)
 
     def get_all_table_names(self):
         table_names = []
-        for schema in ['dim', 'fact']:
+        for schema in ['dim', 'fact', 'dbo']:
             inspector = inspect(self.engine)
             tables = inspector.get_table_names(schema=schema)
             # Prefix table name with schema
