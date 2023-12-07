@@ -1,7 +1,5 @@
-# Multi-Agent Postgres Data Analytics
+# Multi-Agent SQL Server Data Analytics
 *The way we interact with our data is changing.*
-
-![Multi-Agent Postgres Data Analytics](imgs/multi-agent-coding.png)
 
 # 💬 Read This First 💬
 > This repo is an **_experiment_** and **_learning tool_** for building multi-agent systems.
@@ -11,22 +9,11 @@
 > It is **NOT** a framework, or library, or shortcut. 
 > 
 > It **IS** a **_stepping stone_** to help you internalize concepts, patterns and building blocks for your own multi-agent systems and applications.
->
-> Code only tells a story at a moment in time. I highly recommend you watch the [video series](https://www.youtube.com/playlist?list=PLS_o2ayVCKvDzj2YxeFqMq9UbR1PkPEh0) to see the **how and the why** behind the structure of this experimental codebase.
-> 
-> In the series we build this from scratch and dive deep into complexities, principles, patterns and ideas surrounding multi-agent software. The video order is linked below, mapping branches to videos.
->
-> This repo will not be maintained or updated beyond the lifespan of the series. It is a snapshot in time of the code we built in the video series and is meant only to be a reference for you on your journey to building your own multi-agent systems, **_nothing more_**.
->
-> When we complete the series will we freeze the codebase. We will then use it as a reference for experiments, products, and videos.
 
+## 💻 Multi-Agent SQL Server Data Analytics Tool 💻
+This is a multi-agent system that allows you to ask questions about your SQL database in natural language.
 
-## 💻 Multi-Agent Postgres Data Analytics Tool 💻
-This is a multi-agent system that allows you to ask questions about your postgres database in natural language.
-
-The codebase is powered by GPT-4, Assistance API, AutoGen, Postgres, and Guidance.
-
-It's the first of many multi-agent applications that utilize LLMs (large language models) to enable reasoning and decision making with reduced need for explicit rules or logic.
+The codebase is powered by GPT-4, AutoGen, and SQL Server.
 
 ## 💻 Setup 💻
 - **Read the codebase first**. Remember, this is an experiment and learning tool. It's not meant to be a framework or library.
