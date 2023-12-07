@@ -77,7 +77,7 @@ def main():
             "functions": [
                 {
                     "name": "run_sql",
-                    "description": "Run a SQL query against the postgres database",
+                    "description": "Run a SQL query against the SQL database",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -131,8 +131,9 @@ def main():
             + "- CARS is not a user (or specialist as we call them), it is a system."
             + "- A system is made up of multiple cameras plugged into the same NVR (Network Video Recorder, also called a Transmitter)."
             + "- A site (an office, or warehouse of example) is made up of one of more systems."
-            + "- We don't care for SLAs if the site isn't live, i.e. CommissionStatus is 1 for Live."
+            + "- We don't care for SLAs if the site isn't live, i.e. CommissionStatus is 1 for Live (although this column is on the group alerts and individual alerts table)."
             + "- We have 'IsCurrent' for operators, customers, sites, system, and system device (camera)."
+            + "- Use GETUTCDATE() rather than GETDATE() as we are working with UTC datetimes."
             + "- We have IndividualAlarmsUS_Day which aggregates alerts and SLAs into days which can be more efficient to query."
             + "- We have GroupAlarmsUS_Day which aggregates group alarms and SLAs into days which can be more efficient to query."
             + "- When asked about users, or specialists, consider this is IsHuman is true (i.e. not handled by software or CARS)."
@@ -141,6 +142,8 @@ def main():
             + "- A customer can have multiple sites."
             + "- A dealer can have multiple customers."
             + "- All dealers are operators, but not all operators are dealers."
+            + "- Operators/Specialists sometimes refer to alerts as a 'quad' (because an alert shows 3 images and a video in a quad layout)."
+            + "- Quad alerts consist of AnalyticsDetection (ID of 1), ContactAlarm (ID of 2), TriggerAlarm (ID of 3), MotionDetection (ID of 4), and Loitering (ID of 11)."
             + "- A hub is a team of people that alerts."
             + "- An event is an alarm or an alert."
             + "- Cams is the name of the application that users use."
@@ -157,7 +160,7 @@ def main():
             + "- An event is an alarm or an alert."
             + "- An incident is an alarm (or alarms) of interest."
             + "- An isolation is instruction for our software to handle the alarm instead of a human."
-            + "- We don't care for SLAs if the site isn't live, i.e. CommissionStatus is 1 for Live."
+            + "- We don't care for SLAs if the site isn't live, i.e. CommissionStatus is 1 for Live (although this column is on the group alerts and individual alerts table)."
             + "- 'CARS - EMLI - Incoming' is not a 'user', it is a computer system."
             + "- Cams is the name of the application that users use."
             + "- Users with [Dev] are IT users and might be doing operational work on the system and you should consider ignoring their results."
@@ -165,7 +168,7 @@ def main():
             #+ COMPLETION_PROMPT
         )
         PRODUCT_MANAGER_PROMPT = (
-            "Product Manager. Validate the response to make sure it's correct"
+            "Product Manager. Validate the response to make sure it's correct."
             + COMPANY_INFORMATION
             + COMPLETION_PROMPT
         )
