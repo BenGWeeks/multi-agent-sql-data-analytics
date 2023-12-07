@@ -1,4 +1,4 @@
-from modules.db import PostgresManager
+from modules.db import SQLManager
 from modules import file
 import os
 
@@ -68,7 +68,7 @@ class PostgresAgentInstruments(AgentInstruments):
         Support entering the 'with' statement
         """
         self.reset_files()
-        self.db = PostgresManager()
+        self.db = SQLManager()
         self.db.connect_with_url(self.db_url)
         return self, self.db
 

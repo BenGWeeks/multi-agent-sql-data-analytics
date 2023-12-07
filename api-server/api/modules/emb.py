@@ -1,4 +1,4 @@
-from modules.db import PostgresManager
+from modules.db import SQLManager
 
 
 class DatabaseEmbedder:
@@ -7,7 +7,7 @@ class DatabaseEmbedder:
     computing similarity between user queries and table definitions.
     """
 
-    def __init__(self, db: PostgresManager):
+    def __init__(self, db: SQLManager):
         self.map_name_to_embeddings = {}
         self.map_name_to_table_def = {}
         self.db = db

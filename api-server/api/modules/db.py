@@ -1,16 +1,15 @@
 from datetime import datetime
 import json
-import psycopg2
-from psycopg2.sql import SQL, Identifier
+import sqlalchemy
+from sqlalchemy import create_engine, text, MetaData, Table, select, inspect
+from sqlalchemy.orm import sessionmaker
 
-
-# comm
-class PostgresManager:
-    """
-    A class to manage postgres connections and queries
-    """
-
+class SQLManager:
     def __init__(self):
+        self.engine = None
+        self.Session = None
+        self.session = None
+        self.metadata = MetaData()
         self.conn = None
         self.cur = None
 
@@ -18,14 +17,17 @@ class PostgresManager:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.cur:
-            self.cur.close()
-        if self.conn:
-            self.conn.close()
+        if self.session:
+            self.session.close()
 
     def connect_with_url(self, url):
-        self.conn = psycopg2.connect(url)
-        self.cur = self.conn.cursor()
+        #try:
+            self.engine = create_engine(url)
+            self.Session = sessionmaker(bind=self.engine)
+            self.session = self.Session()
+            self.metadata.reflect(bind=self.engine)
+        #except sqlalchemy.exc.InterfaceError as e:
+        #    print("An error occurred while connecting to the database: ", str(e))
 
     def close(self):
         if self.cur:
@@ -33,86 +35,123 @@ class PostgresManager:
         if self.conn:
             self.conn.close()
 
-    def run_sql(self, sql) -> str:
-        """
-        Run a SQL query against the postgres database
-        """
-        self.cur.execute(sql)
-        columns = [desc[0] for desc in self.cur.description]
-        res = self.cur.fetchall()
+    #def upsert(self, table_name, _dict):
+    #    metadata = MetaData(self.engine)
+    #    table = Table(table_name, metadata, autoload_with=self.engine)
+    #   # Check if the record exists
+    #    query = select([table]).where(table.c.id == _dict['id'])
+    #    existing_record = self.session.execute(query).fetchone()
+    #    if existing_record:
+            # Record exists, so update
+    #        update_query = table.update().where(table.c.id == _dict['id']).values(**_dict)
+    #        self.session.execute(update_query)
+    #    else:
+    #        # Record does not exist, so insert
+    #       insert_query = table.insert().values(**_dict)
+    #        self.session.execute(insert_query)
+    #    self.session.commit()
 
-        list_of_dicts = [dict(zip(columns, row)) for row in res]
+    #def delete(self, table_name, _id):
+        #delete_stmt = text(f"DELETE FROM {table_name} WHERE id = :id")
+        #self.session.execute(delete_stmt, {'id': _id})
+        #self.session.commit()
+
+    def get(self, table_name, _id):
+        select_stmt = text(f"SELECT * FROM {table_name} WHERE id = :id")
+        result = self.session.execute(select_stmt, {'id': _id})
+        return result.fetchone()
+
+    def get_all(self, table_name):
+        select_all_stmt = text(f"SELECT * FROM {table_name}")
+        result = self.session.execute(select_all_stmt)
+        return result.fetchall()
+
+    # def run_sql(self, sql):
+    #     self.cur.execute(sql)
+    #     return self.cur.fetchall()
+
+    def run_sql(self, sql) -> str:
+        result = self.session.execute(text(sql))
+        columns = result.keys()
+        rows = result.fetchall()
+        list_of_dicts = [dict(zip(columns, row)) for row in rows]
 
         json_result = json.dumps(list_of_dicts, indent=4, default=self.datetime_handler)
-
         return json_result
 
     def datetime_handler(self, obj):
-        """
-        Handle datetime objects when serializing to JSON.
-        """
         if isinstance(obj, datetime):
             return obj.isoformat()
-        return str(obj)  # or just return the object unchanged, or another default value
+        return str(obj)
 
     def get_table_definition(self, table_name):
-        """
-        Generate the 'create' definition for a table
-        """
+        try:
+            # Reflect the database schema
+            self.metadata.reflect(bind=self.engine)
 
-        get_def_stmt = """
-        SELECT pg_class.relname as tablename,
-            pg_attribute.attnum,
-            pg_attribute.attname,
-            format_type(atttypid, atttypmod)
-        FROM pg_class
-        JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-        JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid
-        WHERE pg_attribute.attnum > 0
-            AND pg_class.relname = %s
-            AND pg_namespace.nspname = 'public'  -- Assuming you're interested in public schema
-        """
-        self.cur.execute(get_def_stmt, (table_name,))
-        rows = self.cur.fetchall()
-        create_table_stmt = "CREATE TABLE {} (\n".format(table_name)
-        for row in rows:
-            create_table_stmt += "{} {},\n".format(row[2], row[3])
-        create_table_stmt = create_table_stmt.rstrip(",\n") + "\n);"
-        return create_table_stmt
+            # Attempt to retrieve the table from the metadata
+            table = self.metadata.tables[table_name]
+
+            # Start building the CREATE TABLE statement
+            create_table_stmt = f"CREATE TABLE {table_name} (\n"
+
+            # Add column definitions to the statement
+            for column in table.columns:
+                create_table_stmt += f"    {column.name} {column.type},\n"
+
+            # Remove the trailing comma and newline, then close the statement
+            create_table_stmt = create_table_stmt.rstrip(",\n") + "\n);"
+
+            return create_table_stmt
+        except KeyError:
+            # Log a warning and return None if the table is not found
+            print(f"Warning: Table {table_name} not found in the database. Skipping.")
+            return None
+
+    def reflect_tables(self):
+        self.metadata = MetaData()
+
+        # Reflect tables for each schema
+        for schema in ['dim', 'fact', 'dbo']:
+            self.metadata.reflect(bind=self.engine, schema=schema)
 
     def get_all_table_names(self):
-        """
-        Get all table names in the database
-        """
-        get_all_tables_stmt = (
-            "SELECT tablename FROM pg_tables WHERE schemaname = 'public';"
-        )
-        self.cur.execute(get_all_tables_stmt)
-        return [row[0] for row in self.cur.fetchall()]
+        table_names = []
+        for schema in ['dim', 'fact', 'dbo']:
+            inspector = inspect(self.engine)
+            tables = inspector.get_table_names(schema=schema)
+            # Prefix table name with schema
+            table_names.extend([f"{schema}.{table}" for table in tables])
+        return table_names
 
     def get_table_definitions_for_prompt(self):
-        """
-        Get all table 'create' definitions in the database
-        """
+        self.reflect_tables()
         table_names = self.get_all_table_names()
         definitions = []
         for table_name in table_names:
-            definitions.append(self.get_table_definition(table_name))
+            try:
+                # Access table with schema prefix
+                table = self.metadata.tables[table_name]
+                columns = ["{} {}".format(column.name, column.type) for column in table.columns]
+                table_definition = "CREATE TABLE {} (\n  {});".format(table_name, ',\n  '.join(columns))
+                definitions.append(table_definition)
+            except KeyError:
+                print("Error accessing " + table_name)
+                continue
         return "\n\n".join(definitions)
-
+    
     def get_table_definition_map_for_embeddings(self):
-        """
-        Creates a map of table names to table definitions
-        """
         table_names = self.get_all_table_names()
         definitions = {}
         for table_name in table_names:
-            definitions[table_name] = self.get_table_definition(table_name)
+            table_def = self.get_table_definition(table_name)
+            if table_def is not None:
+                definitions[table_name] = table_def
         return definitions
 
     def get_related_tables(self, table_list, n=2):
         """
-        Get tables that have foreign keys referencing the given table
+        Get tables that have foreign keys referencing the given table and tables referenced by the given table in SQL Server.
         """
 
         related_tables_dict = {}
@@ -121,16 +160,15 @@ class PostgresManager:
             # Query to fetch tables that have foreign keys referencing the given table
             self.cur.execute(
                 """
-                SELECT 
-                    a.relname AS table_name
+                SELECT DISTINCT 
+                    OBJECT_NAME(fk.referenced_object_id) AS table_name
                 FROM 
-                    pg_constraint con 
-                    JOIN pg_class a ON a.oid = con.conrelid 
+                    sys.foreign_keys AS fk
+                    JOIN sys.tables AS t ON fk.parent_object_id = t.object_id
                 WHERE 
-                    confrelid = (SELECT oid FROM pg_class WHERE relname = %s)
-                LIMIT %s;
+                    OBJECT_NAME(fk.parent_object_id) = %s;
                 """,
-                (table, n),
+                (table,)
             )
 
             related_tables = [row[0] for row in self.cur.fetchall()]
@@ -138,25 +176,24 @@ class PostgresManager:
             # Query to fetch tables that the given table references
             self.cur.execute(
                 """
-                SELECT 
-                    a.relname AS referenced_table_name
+                SELECT DISTINCT 
+                    OBJECT_NAME(fk.parent_object_id) AS referenced_table_name
                 FROM 
-                    pg_constraint con 
-                    JOIN pg_class a ON a.oid = con.confrelid 
+                    sys.foreign_keys AS fk
+                    JOIN sys.tables AS t ON fk.referenced_object_id = t.object_id
                 WHERE 
-                    conrelid = (SELECT oid FROM pg_class WHERE relname = %s)
-                LIMIT %s;
+                    OBJECT_NAME(fk.referenced_object_id) = %s;
                 """,
-                (table, n),
+                (table,)
             )
 
             related_tables += [row[0] for row in self.cur.fetchall()]
 
             related_tables_dict[table] = related_tables
 
-        # convert dict to list and remove dups
+        # Convert dict to list and remove duplicates
         related_tables_list = []
-        for table, related_tables in related_tables_dict.items():
+        for _, related_tables in related_tables_dict.items():
             related_tables_list += related_tables
 
         related_tables_list = list(set(related_tables_list))
